@@ -133,9 +133,39 @@ export PATH=${HOME}/tools/vim/bin:$PATH
 #
 export SCONSFLAGS="-Q"
 
+
 parse_git_branch() {
-    git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/*\1/'
+    git rev-parse --abbrev-ref HEAD 2> /dev/null
 }
-export PS1=': \[\033[34m\]\u@\h\[\033[00m\]\[\033[32m\]$(parse_git_branch)\[\033[00m\]\[\033[33m\]/\W;\[\033[00m\] '
+parse_venv() {
+    test -n "$VIRTUAL_ENV" && cat $VIRTUAL_ENV/bin/activate | sed -n "s/.*x(\(.*\)).*/\1/p"
+}
+reverse() {
+echo "[7m$1[00m"
+}
+red() {
+echo "[31m$1[00m"
+}
+green() {
+echo "[32m$1[00m"
+}
+blue() {
+echo "[34m$1[00m"
+}
+magenta() {
+echo "[35m$1[00m"
+}
+cyan() {
+echo "[36m$1[00m"
+}
+mg() { #magenta-green
+echo "[35m[42m$1[00m"
+}
+cm() { #cyan-magenta
+echo "[36m[45m$1[00m"
+}
 
+PS1='$(reverse $(cyan "📂\W" ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green $(parse_venv)))$(green )\n$ '
+export VIRTUAL_ENV_DISABLE_PROMPT=1
 
+#  ♻️  📂 
