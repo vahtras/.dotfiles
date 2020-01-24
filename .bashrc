@@ -135,7 +135,8 @@ export SCONSFLAGS="-Q"
 
 
 parse_git_branch() {
-    echo $(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+    branch=$(git rev-parse --abbrev-ref HEAD 2> /dev/null)
+    test -n "$branch" && echo "$branch"
 }
 parse_venv() {
     test -n "$VIRTUAL_ENV" && cat $VIRTUAL_ENV/bin/activate | sed -n "s/.*x(\(.*\)).*/♻\1/p"
