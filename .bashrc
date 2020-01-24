@@ -135,10 +135,10 @@ export SCONSFLAGS="-Q"
 
 
 parse_git_branch() {
-    git rev-parse --abbrev-ref HEAD 2> /dev/null
+    echo $(git rev-parse --abbrev-ref HEAD 2> /dev/null)
 }
 parse_venv() {
-    test -n "$VIRTUAL_ENV" && cat $VIRTUAL_ENV/bin/activate | sed -n "s/.*x(\(.*\)).*/\1/p"
+    test -n "$VIRTUAL_ENV" && cat $VIRTUAL_ENV/bin/activate | sed -n "s/.*x(\(.*\)).*/♻\1/p"
 }
 reverse() {
 echo "[7m$1[00m"
@@ -168,4 +168,4 @@ echo "[36m[45m$1[00m"
 PS1='$(reverse $(cyan "📂\W" ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green $(parse_venv)))$(green )\n$ '
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
-#  ♻️  📂 
+#  ♻️  📂  ♻
