@@ -1,0 +1,29 @@
+[user]
+name = Olav Vahtras
+email = vahtras@kth.se
+
+[alias]
+last = log -1 HEAD
+unstage = "reset HEAD -- "
+untrack = "rm --cached "
+ll = log --date=short --pretty=format:'%h %cd %s (%an <%ae>)'
+l = log --date=short --oneline --graph --decorate --topo-order
+la = log --date=short --oneline --graph --decorate --topo-order --all
+s = status
+sh = status --untracked-files=no
+w = symbolic-ref --short HEAD
+p = checkout HEAD^1
+n = "! git checkout $(git rev-list HEAD..master | tail -1)"
+
+[diff]
+tool = vimdiff
+
+[push]
+default = simple
+
+[core]
+editor=vim
+excludesfile = ~/.gitignore
+
+[color]
+ui = auto
