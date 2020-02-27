@@ -13,7 +13,7 @@ Plug 'morhetz/gruvbox'
 "Plug 'numirias/semshi'
 call plug#end()
 
-"colorscheme gruvbox
+colorscheme gruvbox
 
 let g:virtualenv_auto_activate = 1
 "let g:black_linelength = 79
@@ -92,6 +92,7 @@ hi SpellLocal cterm=underline ctermfg=darkgreen
 ":map  mx?def w"zyiw:exe "!python -m pytest -v -k ".@z." %"<CR>
 ":map  mx?def w"zyiw:exe "!python -m pytest -v -k ".@z." "<CR>
 ":nmap ; mx?def w"zyiw:!python -m pytest --pdb -vx -k z %
+:nmap ;T mx?class w"zyiw:term python3 -m pytest --pdb -vvx -k z %
 :nmap ;t mx?def w"zyiw:term python3 -m pytest --pdb -vvx -k z %
 :nmap ;v mx?def w"zyiw:vert term python3 -m pytest --pdb -vvx -k z %
 :nmap ;s mx?def w"zyiw:term python3 -m pytest --pdb -svx -k z %
@@ -108,6 +109,7 @@ hi SpellLocal cterm=underline ctermfg=darkgreen
 ":map  :only!:vert term:0read !python3 #
 "cmap ru new:0read !python3 #
 ":map  :!gnome-terminal -- python3 -i %
+
 
 :cnoremap pip !python -m pip 
 

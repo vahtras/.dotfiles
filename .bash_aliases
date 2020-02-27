@@ -10,6 +10,7 @@ alias pip='PIP_FORMAT=columns python -m pip'
 alias pyl='python $(ls -t | head -1)'
 alias pytest='python3 -m pytest'
 alias tree='tree -I "venv*|__pycache__"'
+alias tmpdir='cd $(mktemp -d)'
 alias vlx='python -m veloxchem'
 alias x='xsel -b'
 alias xpdfl='xpdf "$(ls -t *.pdf| head -1)"'
@@ -519,18 +520,30 @@ EOF
     git commit -m "initial commit"
 }       
 
+function pyver {
+    python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")'
+}
 
 function venv {
-python3.7 -m venv .venv --prompt "$(basename $PWD)"
-. .venv/bin/activate
+venv=.venv$(pyver)
+python -m venv $venv --prompt "$(basename $PWD)-$(pyver)"
+. $venv/bin/activate
 pip install --upgrade pip $@
 pip install wheel
-test -r requirements.txt && pip install -r requirements.txt
+test -r requirements-dev.txt && pip install -r requirements-dev.txt 
+test -r requirements-dev.txt || test -r requirements.txt && pip install -r requirements.txt 
 }
 
 function venv36 {
 python3.6 -m venv .venv36 --prompt "$(basename $PWD)"
 . .venv36/bin/activate
+pip install --upgrade pip $@
+test -r requirements.txt && pip install -r requirements.txt
+}
+
+function venv37 {
+python3.7 -m venv .venv37 --prompt "$(basename $PWD)"
+. .venv37/bin/activate
 pip install --upgrade pip $@
 test -r requirements.txt && pip install -r requirements.txt
 }
