@@ -167,7 +167,7 @@ echo "[36m[45m$1[00m"
 }
 
 #PS1='$(reverse $(cyan "📂\w" ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green $(parse_venv)))$(green )\n\$ '
-PS1='$(reverse $(cyan $(parse_venv) ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green "📂\w"))$(green )\n\$ '
+PS1='$(reverse $(cyan $(parse_venv) ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green "\u@\h:📂\w"))$(green )\n\$ '
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
 # . ~/.pyenvrc
