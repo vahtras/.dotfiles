@@ -170,6 +170,7 @@ echo "[36m[45m$1[00m"
 PS1='$(reverse $(cyan $(parse_venv) ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green "📂\w"))$(green )\n\$ '
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
+# . ~/.pyenvrc
 # export PYENV_ROOT=$HOME/.pyenv
 # export PATH=$PYENV_ROOT/bin:$PATH
 # if command -v pyenv 1>/dev/null 2>&1; then
@@ -179,6 +180,24 @@ export VIRTUAL_ENV_DISABLE_PROMPT=1
 #  ♻️  📂  ♻
 #
 # Open new shell in virtual environment
-test -d .venv && source .venv/bin/activate
 
+export GTESTROOT=/opt/googletest/googletest
+export GTESTLIB=$GTESTROOT/lib/libgtest.a
+export OMP_NUM_THREADS=12
+# export MKLROOT=/opt/intel/mkl
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/olav/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/olav/miniconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/olav/miniconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/olav/miniconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
 

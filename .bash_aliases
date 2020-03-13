@@ -1,4 +1,4 @@
-alias cdl='cd $(ls -t | head -1)'
+alias cdl='cd $(ls -td */ | head -1)'
 alias cddal='cd ~/dev/dalton && cd build/$(git w)'
 alias dtags='ctags ../../DALTON/*/*.[Fhc]'
 alias evincel='evince "$(ls -t *.pdf| head -1)"'
@@ -11,6 +11,7 @@ alias pyl='python $(ls -t | head -1)'
 alias pytest='python3 -m pytest'
 alias tree='tree -I "venv*|__pycache__"'
 alias tmpdir='cd $(mktemp -d)'
+alias tmpenv='condaenv=$(basename $(mktemp -u)) && conda create -y -n $condaenv python=${PYTHON-3.7} && conda activate $condaenv'
 alias vlx='python -m veloxchem'
 alias x='xsel -b'
 alias xpdfl='xpdf "$(ls -t *.pdf| head -1)"'
@@ -535,17 +536,27 @@ test -r requirements-dev.txt || test -r requirements.txt && pip install -r requi
 }
 
 function venv36 {
-python3.6 -m venv .venv36 --prompt "$(basename $PWD)"
+python3.6 -m venv .venv36 --prompt "venv36-$(basename $PWD)"
 . .venv36/bin/activate
 pip install --upgrade pip $@
-test -r requirements.txt && pip install -r requirements.txt
+usemkl
+if [ "$1" == "install" ]; then
+    test -r requirements.txt && pip install -r requirements.txt
+fi
 }
 
 function venv37 {
-python3.7 -m venv .venv37 --prompt "$(basename $PWD)"
+python3.7 -m venv .venv37 --prompt "venv37-$(basename $PWD)"
 . .venv37/bin/activate
 pip install --upgrade pip $@
-test -r requirements.txt && pip install -r requirements.txt
+usemkl
+if [ "$1" == "install" ]; then
+    test -r requirements.txt && pip install -r requirements.txt
+fi
+}
+
+function usemkl {
+    export MKLROOT=/opt/intel/mkl
 }
 
 alias intel='. /opt/intel/bin/ifortvars.sh intel64; . /opt/intel/inspector_xe/inspxe-vars.sh; .  /opt/intel/debugger_2016/bin/debuggervars.sh'

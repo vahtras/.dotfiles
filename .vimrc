@@ -7,7 +7,7 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'dense-analysis/ale'
 Plug 'jmcantrell/vim-virtualenv'
-"Plug 'psf/black'
+Plug 'psf/black'
 Plug 'liuchengxu/vim-clap'
 Plug 'morhetz/gruvbox'
 "Plug 'numirias/semshi'
