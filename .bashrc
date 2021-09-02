@@ -185,19 +185,3 @@ export GTESTROOT=/opt/googletest/googletest
 export GTESTLIB=$GTESTROOT/lib/libgtest.a
 export OMP_NUM_THREADS=12
 # export MKLROOT=/opt/intel/mkl
-
-# >>> conda initialize >>>
-# !! Contents within this block are managed by 'conda init' !!
-__conda_setup="$('/home/olav/miniconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
-if [ $? -eq 0 ]; then
-    eval "$__conda_setup"
-else
-    if [ -f "/home/olav/miniconda3/etc/profile.d/conda.sh" ]; then
-        . "/home/olav/miniconda3/etc/profile.d/conda.sh"
-    else
-        export PATH="/home/olav/miniconda3/bin:$PATH"
-    fi
-fi
-unset __conda_setup
-# <<< conda initialize <<<
-
