@@ -4,7 +4,7 @@ alias dtags='ctags ../../DALTON/*/*.[Fhc]'
 alias evincel='evince "$(ls -t *.pdf| head -1)"'
 alias glances='glances --theme-white'
 alias taif='tail -f $(ls -t | head -1)'
-alias lsl='ls -lt | head'
+alias lsl='ls -lth | head'
 # alias vil='vim "$(ls -t | head -1)"'
 alias pip='PIP_FORMAT=columns python -m pip'
 alias pyl='python $(ls -t | head -1)'
@@ -522,17 +522,17 @@ EOF
 }       
 
 function pyver {
-    python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")'
+    python3 -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")'
 }
 
 function venv {
 venv=.venv$(pyver)
-python -m venv $venv --prompt "$(basename $PWD)-$(pyver)"
+python3 -m venv $venv --prompt "$(basename $PWD)-$(pyver)"
 . $venv/bin/activate
-pip install --upgrade pip $@
-pip install wheel
-test -r requirements-dev.txt && pip install -r requirements-dev.txt 
-test -r requirements-dev.txt || test -r requirements.txt && pip install -r requirements.txt 
+python3 -m pip install --upgrade pip $@
+python3 -m pip install wheel
+test -r requirements-dev.txt && python3 -m pip install -r requirements-dev.txt 
+test -r requirements-dev.txt || test -r requirements.txt && python3 -m pip install -r requirements.txt 
 }
 
 function venv36 {
@@ -681,4 +681,24 @@ function cov {
 }
 function mut {
     mut.py --unit-test=$(basename $1 .py) --target=$(basename $2 .py) --runner pytest -m
+}
+
+function newcourse {
+    python3 -m venv ~/.venvs/$1 && \
+        source ~/.venvs/$1/bin/activate && \
+        pip install jupyter nbgrader && \
+        jupyter nbextension install --sys-prefix --py nbgrader --overwrite && \
+        jupyter nbextension enable --sys-prefix --py nbgrader && \
+        jupyter serverextension enable --sys-prefix --py nbgrader
+    test -n "$1" && nbgrader quickstart $1 && cd $1 && \
+    cat << EOF >> nbgrader_config.py
+c.FileNameCollectorPlugin.named_regexp = \
+    r'.*[a-z]+_(?P<student_id>\d+)_(?P<submission_id>\d+)_(?P<file_id>.*)'
+c.ClearSolutions.code_stub = {'python': '# YOUR CODE HERE\n################', 'matlab': "% YOUR CODE HERE\nerror('No Answer Given!')", 'octave': "% YOUR CODE HERE\nerror('No Answer Given!')", 'sas': '/* YOUR CODE HERE */\n %notImplemented;', 'java': '// YOUR CODE HERE'}
+c.Exchange.root = '/srv/nbgrader/exchange'
+EOF
+}
+
+function newenv {
+    python3 -m venv ~/.venvs/$1 && ln -s ~/.venvs/$1 .venv && cv .
 }

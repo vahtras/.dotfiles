@@ -111,7 +111,7 @@ test -f /opt/tcl/init/bash && . /opt/tcl/init/bash
 #xset b off
 
 #Dalton
-. ~/.daltonrc
+# . ~/.daltonrc
 export scripting=/home/olav/Dropbox/Course/KCSE/Scripting
 # export PS1="$ "
 export AFS=/afs/pdc.kth.se/home/v/vahtras
@@ -139,36 +139,36 @@ parse_git_branch() {
     test -n "$branch" && echo "$branch"
 }
 parse_venv() {
-    test -n "$VIRTUAL_ENV" && cat $VIRTUAL_ENV/bin/activate | sed -n "s/.*x(\(.*\)).*/♻\1/p"
+    test -n "$VIRTUAL_ENV" && cat "$VIRTUAL_ENV/bin/activate" | sed -n "s/.*x(\(.*\)).*/(♻\1) /p"
 }
 reverse() {
-echo "[7m$1[00m"
+echo "[7m$*[00m"
 }
 red() {
-echo "[31m$1[00m"
+echo "[31m$*[00m"
 }
 green() {
-echo "[32m$1[00m"
+echo [32m$*[00m
 }
 blue() {
-echo "[34m$1[00m"
+echo "[34m$*[00m"
 }
 magenta() {
-echo "[35m$1[00m"
+echo "[35m$*[00m"
 }
 cyan() {
-echo "[36m$1[00m"
+echo "[36m$*[00m"
 }
 mg() { #magenta-green
-echo "[35m[42m$1[00m"
+echo "[35m[42m$*[00m"
 }
 cm() { #cyan-magenta
-echo "[36m[45m$1[00m"
+echo "[36m[45m$*[00m"
 }
 
 #PS1='$(reverse $(cyan "📂\w" ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green $(parse_venv)))$(green )\n\$ '
-PS1='$(reverse $(cyan $(parse_venv) ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green "\u@\h:📂\w"))$(green )\n\$ '
-export VIRTUAL_ENV_DISABLE_PROMPT=1
+PS1='$(reverse $(cyan $(parse_venv) ))$(cm )$(reverse $(magenta $(parse_git_branch)))$(mg )$(reverse $(green "\u@\h:📂\w"))$(green )\n\$ '
+export VIRTUAL_ENV_DISABLE_PROMPT=0
 
 # . ~/.pyenvrc
 # export PYENV_ROOT=$HOME/.pyenv
@@ -185,3 +185,8 @@ export GTESTROOT=/opt/googletest/googletest
 export GTESTLIB=$GTESTROOT/lib/libgtest.a
 export OMP_NUM_THREADS=12
 # export MKLROOT=/opt/intel/mkl
+
+export PATH=$PATH:.
+
+# direnv for project-dependent environment variables
+eval "$(direnv hook bash)"
