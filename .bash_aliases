@@ -1,22 +1,32 @@
-alias cdl='cd $(ls -td */ | head -1)'
+alias bal='vim ~/.dotfiles/.bash_aliases'
+alias brc='vim ~/.dotfiles/.bashrc'
+alias cdl='cd "$(ls -td */ | head -1)"'
 alias cddal='cd ~/dev/dalton && cd build/$(git w)'
+alias chill='pip-chill --no-chill'
 alias dtags='ctags ../../DALTON/*/*.[Fhc]'
+alias dl='cd ~/Downloads'
 alias evincel='evince "$(ls -t *.pdf| head -1)"'
 alias glances='glances --theme-white'
+alias nb='python -m notebook'
 alias taif='tail -f $(ls -t | head -1)'
-alias lsl='ls -lt | head'
+alias kindle='open https://read.amazon.com/notebook'
+alias lsl='ls -lth | head'
 # alias vil='vim "$(ls -t | head -1)"'
-alias pip='PIP_FORMAT=columns python -m pip'
+alias pip='PIP_FORMAT=columns python3 -m pip --no-cache-dir'
+alias piplist='pip-chill --no-chill'
 alias pyl='python $(ls -t | head -1)'
 alias pytest='python3 -m pytest'
 alias tree='tree -I "venv*|__pycache__"'
 alias tmpdir='cd $(mktemp -d)'
 alias tmpenv='condaenv=$(basename $(mktemp -u))-${PYTHON-3.7} && conda create -y -c conda-forge -n $condaenv python=${PYTHON-3.7} && conda activate $condaenv'
-alias vlx='python -m veloxchem'
+alias vrc='vim ~/.vimrc'
+# alias vlx='python -m veloxchem'
 alias x='xsel -b'
+alias open='xdg-open'
 alias xpdfl='xpdf "$(ls -t *.pdf| head -1)"'
 alias xviewl='xview "$(ls -t *.png| head -1)"'
 alias condainit='eval "$(~/miniconda/condabin/conda  shell.bash hook)"'
+alias nbgraderinit='jupyter nbextension install --sys-prefix --py nbgrader --overwrite; jupyter nbextension enable --sys-prefix --py nbgrader; jupyter serverextension enable --sys-prefix --py nbgrader'
 
 function vil {
     echo 'ho'
@@ -386,15 +396,11 @@ github-create() {
   branch_name=${2-"master"}
 
   invalid_credentials=0
-  username=`git config github.user`
-  if [ "$username" = "" ]; then
-    echo "  Could not find username, run 'git config --global github.user <username>'"
-    invalid_credentials=1
-  fi
+  username=vahtras
+  token=`cat ~/.github`
 
-  token=`git config github.token`
   if [ "$token" = "" ]; then
-    echo "  Could not find token, run 'git config --global github.token <token>'"
+    echo "  Could not find token, save token in ~/.github"
     invalid_credentials=1
   fi
 
@@ -463,24 +469,64 @@ function dalgrep_ci {
 function newtalk {
 test "$1" != "" || exit
 talk=$1
-mkdir $talk && cd $talk && cat > talk.md << EOF
+mkdir $talk && cd $talk && cat > talk.css << EOF
+<style>
+.centered {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<link rel="stylesheet" href="/$talk/refreeze/js/highlight/styles/gruvbox-light.css">
+<script src="/$talk/refreeze/js/highlight/highlight.pack.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 <script type="text/javascript"
   src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 </script>
+EOF
+cat > open_static.py << EOF
+#!/usr/bin/env python
+
+import flask
+import random
+import pathlib
+
+root = str(pathlib.Path(__file__).parent.resolve())
+stem = pathlib.Path(__file__).parent.stem
+
+app = flask.Flask(__name__, static_folder=root, static_url_path=f'/{stem}', template_folder=root)
+
+
+@app.route('/')
+def index():
+    return flask.render_template('index.html')
+
+
+port = int(5000 + 5000*random.random())
+app.run(debug=True, port=port)
+EOF
+chmod +x open_static.py
+cat > talk.md << EOF
 # $talk
 
-## Olav Vahtras
+## h2
 
-KTH
+### h3
+
+titlepage
 
 ---
 
 layout: false
 
-## Slide
+## Write me
 
 - Hi
 - Ho
+
+~~~
+foo = bar
+~~~
 
 ---
 
@@ -490,20 +536,16 @@ layout: false
 EOF
 
     git init
-    #git add talk.md
-    echo venv3 > .gitignore
-    #git add .gitignore
-    python3 -m venv venv3 --prompt $talk
-    . venv3/bin/activate
+    echo .venv > .gitignore
+    python3 -m venv .venv --prompt $talk
+    source .venv/bin/activate
     pip install pip --upgrade
     pip install Flask
     pip install Frozen-Flask
     pip install Flask-Bootstrap
     pip install pytest
     pip freeze > requirements.txt
-    #git add requirements.txt
-    git submodule add https://github.com/bast/refreeze.git refreeze
-    #python refreeze/flask_app.py
+    git submodule add https://github.com/vahtras/refreeze.git refreeze
     python refreeze/freeze.py
     cat > Makefile << EOF
 index.html: talk.md
@@ -515,7 +557,8 @@ test:
 RANDOM_PORT=\`python -c 'import random; print(int(5000+ 5000*random.random()))'\`
 
 slideshow:
-	PORT=\$(RANDOM_PORT) python refreeze/flask_app.py
+	PORT=\$(RANDOM_PORT) python refreeze/flask_app.py &
+	gnome-terminal --tab -e "vim talk.md"
 EOF
     git add talk.md  .gitignore requirements.txt index.html Makefile
     git commit -m "initial commit"
@@ -525,38 +568,23 @@ function pyver {
     python -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")'
 }
 
+
 function venv {
-venv=.venv$(pyver)
-python -m venv $venv --prompt "$(basename $PWD)-$(pyver)"
-. $venv/bin/activate
-pip install --upgrade pip $@
-pip install wheel
-test -r requirements-dev.txt && pip install -r requirements-dev.txt 
-test -r requirements-dev.txt || test -r requirements.txt && pip install -r requirements.txt 
-}
-
-function venv36 {
-python3.6 -m venv .venv36 --prompt "venv36-$(basename $PWD)"
-. .venv36/bin/activate
-pip install --upgrade pip $@
+ver=${1-3.8}
+python$ver -m venv venv/$ver
+source venv/$ver/bin/activate
+python$ver -m pip install pip wheel --upgrade 
 usemkl
-if [ "$1" == "install" ]; then
-    test -r requirements.txt && pip install -r requirements.txt
-fi
-}
-
-function venv37 {
-python3.7 -m venv .venv37 --prompt "venv37-$(basename $PWD)"
-. .venv37/bin/activate
-pip install --upgrade pip $@
-usemkl
-if [ "$1" == "install" ]; then
+if [[ "$2" == "install" ]]; then
     test -r requirements.txt && pip install -r requirements.txt
 fi
 }
 
 function usemkl {
     export MKLROOT=/opt/intel/mkl
+    export LD_LIBRARY_PATH=$MKLROOT/lib/intel64
+    export PYTHON_CONFIGURE_OPTS="--enable-shared"
+    export GTESTROOT=/usr/local
 }
 
 alias intel='. /opt/intel/bin/ifortvars.sh intel64; . /opt/intel/inspector_xe/inspxe-vars.sh; .  /opt/intel/debugger_2016/bin/debuggervars.sh'
@@ -571,7 +599,7 @@ findall ()
     find ${2-.} -type f -exec grep -H $1 {} \;
 }
 
-catcsv () { python -c "import pandas; print(pandas.read_csv('$1'))" ;}
+catcsv () { python -c "import pandas; print(pandas.read_csv('$1', sep='${2-,}'))" ;}
 
 
 function makelecture {
@@ -647,8 +675,8 @@ g=$2
 # c=$3
 shift; shift
 set -x
-boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g $*
-#boxplot --cat Skola --filters Arbetsområde=$a Grupperingsnivå=$g $*
+#boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
+boxplot --cat Skola --filters Arbetsområde=$a Grupperingsnivå=$g $*
 set +x
 }
 
@@ -657,13 +685,21 @@ a=$1
 g=$2
 # c=$3
 shift; shift
-pointplot --cat Kön --filters ArbOmr=$a Grupp.nivå=$g --table $*
+pointplot --cat Kön --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
 }
 
 function bef {
 bef=$1; shift
 #boxplot --cat Skola --filters Benämning=$bef --table 0 $*
 boxplot --cat Skola --filters Benämning=$bef $*
+# boxplot --filters Benämning=$bef $*
+}
+
+function bef-kth {
+bef=$1; shift
+#boxplot --cat Skola --filters Benämning=$bef --table 0 $*
+# boxplot --cat Skola --filters Benämning=$bef $*
+boxplot --filters Benämning=$bef $*
 }
 
 function ppbef {
@@ -671,9 +707,17 @@ bef=$1; shift
 pointplot --cat Kön --filters Benämning=$bef $*
 }
 
+function efternamn {
+    boxplot --show Efternamn=$1
+}
+
 function cv {
     cd $1
     test -d .venv && source .venv/bin/activate
+}
+
+function activate {
+    test -d $1/.venv && source $1/.venv/bin/activate
 }
 
 function cov {
@@ -681,4 +725,7 @@ function cov {
 }
 function mut {
     mut.py --unit-test=$(basename $1 .py) --target=$(basename $2 .py) --runner pytest -m
+}
+function path-pop {
+    echo $PATH | python -c 'path=input(); print("export PATH=", path.split(":", 1)[1], sep="")'
 }

@@ -7,6 +7,7 @@ last = log -1 HEAD
 unstage = "reset HEAD -- "
 untrack = "rm --cached "
 ll = log --date=short --pretty=format:'%h %cd %s (%an <%ae>)'
+lla = log --date=iso --pretty=format:'%h %cd %s (%an <%ae>)' --all --decorate
 l = log --date=short --oneline --graph --decorate --topo-order
 la = log --date=short --oneline --graph --decorate --topo-order --all
 s = status
@@ -14,6 +15,8 @@ sh = status --untracked-files=no
 w = symbolic-ref --short HEAD
 p = checkout HEAD^1
 n = "! git checkout $(git rev-list HEAD..master | tail -1)"
+cloner = clone --recursive
+pr = "!pr() { git fetch origin pull/$1/head:PR$1; }; pr"
 
 [diff]
 tool = vimdiff
@@ -27,3 +30,5 @@ excludesfile = ~/.gitignore
 
 [color]
 ui = auto
+[credential]
+	helper = cache
