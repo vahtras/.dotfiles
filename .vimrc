@@ -7,34 +7,48 @@ endif
 call plug#begin('~/.vim/plugged')
 Plug 'dense-analysis/ale'
 Plug 'jmcantrell/vim-virtualenv'
-Plug 'psf/black'
+"Plug 'psf/black'
 Plug 'liuchengxu/vim-clap'
 Plug 'morhetz/gruvbox'
 "Plug 'numirias/semshi'
+Plug 'vimwiki/vimwiki'
+Plug 'pychimp/vim-sol'
+Plug 'dhruvasagar/vim-railscasts-theme'
+Plug 'altercation/vim-colors-solarized'
+Plug 'godlygeek/tabular'
+Plug 'plasticboy/vim-markdown'
 call plug#end()
 
-colorscheme gruvbox
+if &diff
+    colorscheme gruvbox
+endif
 
 let g:virtualenv_auto_activate = 1
 "let g:black_linelength = 79
 
-cab latex !(latex %< && bibtex %< && latex %< && latex %<)
+cab latex !(latex -shell-escape %< && bibtex %< && latex -shell-escape %< && latex -shell-escape %<)
 cab xdvi !xdvi %<.dvi &
 cab pdflatex !(pdflatex %< && bibtex %< && pdflatex %< && pdflatex %<)
 cab xpdf !xpdf %<.pdf &
 cab evince !evince %<.pdf &
 iab bart \documentclass{article}\begin{document}\end{document}O
+cab black !black %
+cab notabs %s/	/    /g
 iab brevtex \documentclass{revtex4}\begin{document}\end{document}O
+iab bhtml <!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title></title><script></script></head><body></body></html>
 iab bdiv <div class="col-md-6"></div>O
+iab bmint \begin{minted}[bgcolor=bgcode]{Python}\end{minted}O
 iab brow <div class="row"></div>O
 iab bdoc \begin{document}\end{document}O
 iab beq \begin{equation}\end{equation}O
 iab bmain if __name__ == "__main__":
+iab bminted \begin{minted}[bgcolor=lightgray]{python}\end{minted}O
 iab bmark @pytest.mark.parametrize('input, expected',[(),])
 iab bsp \begin{split}\end{split}O
 iab bpy #!/usr/bin/env python# -*- coding: utf-8 -*-
 iab bunittest import unittestclass NewTest(unittest.TestCase):    def setUp(self):        pass    def tearDown(self):        passif __name__ == "__main__":    unittest.main()
 iab bargparse import argparseparser = argparse.ArgumentParser()parser.add_argument('arg', help='First arg')parser.add_argument('--opt', help='First opt')parser.add_argument('--flag', action='store_true', help='Set flag true')args = parser.parse_args()
+iab bargs """Arguments::param foo: what is foo:type foo: footype:returns: what is bar:rtype: bartype"""
     
 
 "set efm=%f:%l.%c:%m
@@ -45,11 +59,12 @@ iab bargparse import argparseparser = argparse.ArgumentParser()parser.add_ar
 set efm=E\ %.%#File\ \"%f\"\\,\ line\ %l
 
 set makeprg=make
-setlocal spell spelllang=en_gb
+setlocal spell spelllang=en_us
 set ts=88
 au BufNewFile,BufRead * set sw=4 tw=79
 au BufNewFile,BufRead *.F set sw=3 tw=72
 au BufNewFile,BufRead [Mm]akefile set ts=8
+au BufNewFile,BufRead *.mk set ts=8
 au BufNewFile,BufRead *.cpp set ts=4
 au BufNewFile,BufRead *.h set ts=4
 
@@ -86,7 +101,7 @@ hi SpellLocal cterm=underline ctermfg=darkgreen
 "au BufWritePost *.md !python -m pytest --doctest-glob="*.md" %
 "au BufWritePost *.md !make test
 "au BufWritePost *.py !python -m nose -x
-"au BufWritePost *.tex !pdflatex %<
+au BufWritePost *.tex !make
 ":map  "zyiw:!python -m pytest ".@z.""<CR>
 " With the cursur over the test function name, run this with pytest
 ":map  mx?def w"zyiw:exe "!python -m pytest -v -k ".@z." %"<CR>
@@ -100,6 +115,7 @@ hi SpellLocal cterm=underline ctermfg=darkgreen
 :nmap ,vt :vert term python3 -m pytest --pdb -v %
 :nmap ,s :term python3 -m pytest --pdb -vs %
 :nmap ,r :term python3 -i %
+:nmap ,d :term python3 -m pdb %
 :nmap ,v :vert term python3 -i %
 :nmap ,dt :term python3 -m doctest %
 
@@ -122,3 +138,8 @@ inoremap <li> <li></li>hhhhi
 inoremap <p> <p></p>hhhi
 
 set efm=%f:%l:\ DocTestFailure
+
+imap aa å
+imap ae ä
+imap oe ő
+
