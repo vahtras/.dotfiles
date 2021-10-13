@@ -550,6 +550,8 @@ EOF
     cat > Makefile << EOF
 index.html: talk.md
 	python refreeze/freeze.py
+	@cp index.html /tmp
+	@cat /tmp/index.html | sed "s;img/;/$talk/img/;" > index.html
 
 test:
 	python -m pytest -vx --doctest-glob '*.md'
@@ -764,8 +766,97 @@ EOF
 
 function newenv {
     python3 -m venv ~/.venvs/$1 && ln -s ~/.venvs/$1 .venv && cv .
+    python3 -m pip install pip wheel --upgrade
+}
+
+function wo {
+    source ~/.venvs/$1/bin/activate
 }
 
 function path-pop {
     echo $PATH | python -c 'path=input(); print("export PATH=", path.split(":", 1)[1], sep="")'
+}
+function newsite {
+    site=$1
+    venv=~/.venvs/$site
+    test -d $venv || newenv $site
+    $venv/bin/python -m pip install --upgrade pip wheel
+    $venv/bin/python -m pip install flask-bootstrap
+    mkdir $site
+    cd $site
+    #
+    # run script
+    #
+    cat > run.py << EOF
+#!/usr/bin/env python
+
+import webbrowser
+
+import flask
+import flask_bootstrap
+
+
+app = flask.Flask(__name__)
+flask_bootstrap.Bootstrap().init_app(app)
+
+@app.route('/')
+def index():
+    return flask.render_template('index.html')
+
+if __name__ == "__main__":
+    webbrowser.open_new_tab('localhost:5000')
+    app.run(debug=True)
+EOF
+    chmod +x run.py
+
+    #
+    # templates folder
+    #
+    mkdir templates
+    cat > templates/index.html << EOF
+{% extends "bootstrap/base.html" %}
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="/static/css/styles.css">
+{% endblock styles %}
+{% block content %}
+<div class="container">
+<h1>Lorem Ipsum</h1>
+
+<h2>"Neque porro quisquam est qui dolorem ipsum quia dolor sit amet,
+consectetur, adipisci velit..."</h2>
+
+<h3>"There is no one who loves pain itself, who seeks after it and wants to
+have it, simply because it is pain..."</h3>
+<p>
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam tristique iaculis ante vel egestas. Nunc vitae neque id erat feugiat luctus non ac ex. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum id purus consectetur, venenatis augue eu, mattis massa. Fusce congue massa vitae orci vehicula, varius dictum arcu mollis. Maecenas commodo nunc semper elit lacinia, egestas consequat felis hendrerit. Cras eu sagittis felis. Nullam facilisis massa ac mi posuere luctus.
+</p>
+</div>
+{% endblock content %}
+EOF
+
+    #
+    # Static
+    #
+    newstatic
+    source $venv/bin/activate
+}
+
+function newstatic {
+    test -d static/css || mkdir -p static/css
+    cat > static/css/styles.css << EOF
+h1 {
+    color: blue;
+}
+h2 {
+    color: green;
+}
+h3 {
+    color: red;
+}
+p {
+    color: gray;
+    font-style: italic;
+}
+EOF
 }

@@ -139,7 +139,7 @@ parse_git_branch() {
     test -n "$branch" && echo "$branch"
 }
 parse_venv() {
-    test -n "$VIRTUAL_ENV" && cat "$VIRTUAL_ENV/bin/activate" | sed -n "s/.*x(\(.*\)).*/(♻\1) /p"
+    test -n "$VIRTUAL_ENV" && echo "($(basename $VIRTUAL_ENV)) "
 }
 reverse() {
 echo "[7m$*[00m"
@@ -190,3 +190,11 @@ export PATH=$PATH:.
 
 # direnv for project-dependent environment variables
 eval "$(direnv hook bash)"
+
+#starship
+eval "$(starship init bash)"
+function set_win_title(){
+    echo -ne "\033]0; $(basename "$PWD") \007"
+}
+starship_precmd_user_func="set_win_title"
+
