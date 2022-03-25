@@ -4,7 +4,7 @@ alias cdl='cd "$(ls -td */ | head -1)"'
 alias cddal='cd ~/dev/dalton && cd build/$(git w)'
 alias chill='pip-chill --no-chill'
 alias dtags='ctags ../../DALTON/*/*.[Fhc]'
-alias dl='cd ~/Downloads'
+alias dl='mv -v "$HOME/Downloads/$(ls -t ~/Downloads|head -1)" .'
 alias evincel='evince "$(ls -t *.pdf| head -1)"'
 alias glances='glances --theme-white'
 alias nb='python -m notebook'
@@ -514,9 +514,10 @@ foo = bar
 EOF
 
     git init
-    echo .venv > .gitignore
-    python3 -m venv .venv --prompt $talk
-    source .venv/bin/activate
+    git checkout -b gh-pages
+    #echo .venv > .gitignore
+    #python3 -m venv .venv --prompt $talk
+    #source .venv/bin/activate
     pip install pip --upgrade
     pip install Flask
     pip install Frozen-Flask
@@ -727,12 +728,7 @@ function mut {
 }
 
 function newcourse {
-    python3 -m venv ~/.venvs/$1 && \
-        source ~/.venvs/$1/bin/activate && \
-        pip install jupyter nbgrader && \
-        jupyter nbextension install --sys-prefix --py nbgrader --overwrite && \
-        jupyter nbextension enable --sys-prefix --py nbgrader && \
-        jupyter serverextension enable --sys-prefix --py nbgrader
+    newenv $1 && pip install jupyter jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader && nbgraderinit 
     test -n "$1" && nbgrader quickstart $1 && cd $1 && \
     cat << EOF >> nbgrader_config.py
 c.FileNameCollectorPlugin.named_regexp = \
@@ -743,8 +739,9 @@ EOF
 }
 
 function newenv {
-    python3 -m venv ~/.venvs/$1 && ln -s ~/.venvs/$1 .venv && cv .
+    python3 -m venv ~/.venvs/$1 && source ~/.venvs/$1/bin/activate
     python3 -m pip install pip wheel --upgrade
+    python3 -m pip install pip-chill
 }
 
 function wo {
