@@ -480,9 +480,6 @@ mkdir $talk && cd $talk && cat > talk.css << EOF
 <link rel="stylesheet" href="/$talk/refreeze/js/highlight/styles/gruvbox-light.css">
 <script src="/$talk/refreeze/js/highlight/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
-<script type="text/javascript"
-  src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-</script>
 EOF
 cat > talk.md << EOF
 # $talk
@@ -501,6 +498,8 @@ layout: false
 
 - Hi
 - Ho
+
+\$$ E = mc^2 \$$
 
 ~~~
 foo = bar
@@ -527,7 +526,7 @@ EOF
     git submodule add https://github.com/vahtras/refreeze.git refreeze
     python refreeze/freeze.py
     cat > Makefile << EOF
-index.html: talk.md
+index.html: talk.md talk.css
 	python refreeze/freeze.py
 	@cp index.html /tmp
 	@cat /tmp/index.html | sed "s;img/;/$talk/img/;" > index.html
@@ -834,4 +833,12 @@ p {
     font-style: italic;
 }
 EOF
+}
+
+function png {
+   mv -v "$(ls -t ~/Pictures/Screenshot* | head -1)" $1.png
+}
+
+function getdown {
+   mv -iv ~/Downloads/$(ls -t ~/Downloads | head -1) .
 }
