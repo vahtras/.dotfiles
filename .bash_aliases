@@ -2,20 +2,27 @@ alias bal='vim ~/.dotfiles/.bash_aliases'
 alias brc='vim ~/.dotfiles/.bashrc'
 alias cdl='cd "$(ls -td */ | head -1)"'
 alias cddal='cd ~/dev/dalton && cd build/$(git w)'
-alias chill='pip-chill --no-chill'
+alias chill='pip-chill --no-chill | grep -v pytest | grep -v selenium | grep -v httpx'
 alias dtags='ctags ../../DALTON/*/*.[Fhc]'
 alias dl='mv -v "$HOME/Downloads/$(ls -t ~/Downloads|head -1)" .'
 alias evincel='evince "$(ls -t *.pdf| head -1)"'
 alias glances='glances --theme-white'
+alias glink='sed "s;file/d/;uc?id=;" | sed "s;/view.*;;"'
 alias nb='python -m notebook'
+alias maked='make -f flask-deploy/Makefile'
+alias newslide='cookiecutter cookiecutter-slides'
 alias taif='tail -f $(ls -t | head -1)'
 alias kindle='open https://read.amazon.com/notebook'
 alias lsl='ls -lth | head'
 # alias vil='vim "$(ls -t | head -1)"'
-alias pip='PIP_FORMAT=columns python3 -m pip --no-cache-dir'
+alias openl='xdg-open "$(ls -t | head -1)"'
+alias pip='PIP_FORMAT=columns python3 -m pip'
+alias pup='pip install pip setuptools wheel --upgrade'
 alias piplist='pip-chill --no-chill'
 alias pyl='python $(ls -t | head -1)'
 alias pytest='python3 -m pytest'
+alias R='R --no-restore --no-save'
+alias randomhex='python3 -c "import uuid; print(uuid.uuid4().hex)"'
 alias tree='tree -I "venv*|__pycache__"'
 alias tmpdir='cd $(mktemp -d)'
 alias tmpenv='condaenv=$(basename $(mktemp -u))-${PYTHON-3.7} && conda create -y -c conda-forge -n $condaenv python=${PYTHON-3.7} && conda activate $condaenv'
@@ -27,6 +34,10 @@ alias xpdfl='xpdf "$(ls -t *.pdf| head -1)"'
 alias xviewl='xview "$(ls -t *.png| head -1)"'
 alias condainit='eval "$(~/miniconda/condabin/conda  shell.bash hook)"'
 alias nbgraderinit='jupyter nbextension install --sys-prefix --py nbgrader --overwrite; jupyter nbextension enable --sys-prefix --py nbgrader; jupyter serverextension enable --sys-prefix --py nbgrader'
+
+function gdl {
+    gdown $(echo $1 | glink)
+}
 
 function vil {
     echo 'ho'
@@ -134,9 +145,9 @@ fi
 function mvall {
 for i in $(ls *$1* 2> /dev/null)
 do
-   new=$(echo $i  | sed "s/$1/$2/g")
-   echo "$PRE mv $i $new"
-   $PRE mv $i $new
+   new=$(echo "$i"  | sed "s/$1/$2/g")
+   echo $PRE mv "$i" "$new"
+   $PRE mv "$i" "$new"
 done
 }
 
@@ -502,7 +513,10 @@ layout: false
 \$$ E = mc^2 \$$
 
 ~~~
-foo = bar
+>>> foo = "bar"
+>>> foo
+'bar'
+
 ~~~
 
 ---
@@ -514,15 +528,43 @@ EOF
 
     git init
     git checkout -b gh-pages
+    cat >> .gitignore << EOF
+*.pyc
+EOF
+    cat >> .git/hooks/pre-commit << EOF
+#!/bin/bash
+make test || exit 1
+make && git add index.html
+EOF
+    chmod +x .git/hooks/pre-commit
+
+    cat > open_static.py << EOF
+#!/usr/bin/env python
+
+import flask
+import random
+
+root = '$PWD'
+app = flask.Flask(__name__, static_folder=root, static_url_path='/$talk', template_folder=root)
+
+
+@app.route('/')
+def index():
+    return flask.render_template('index.html')
+
+
+port = int(5000 + 5000*random.random())
+app.run(debug=True, port=port)
+EOF
     #echo .venv > .gitignore
     #python3 -m venv .venv --prompt $talk
     #source .venv/bin/activate
+    newvenv talk-$talk && wo talk-$talk
     pip install pip --upgrade
     pip install Flask
     pip install Frozen-Flask
-    pip install Flask-Bootstrap
     pip install pytest
-    pip freeze > requirements.txt
+    piplist > requirements.txt
     git submodule add https://github.com/vahtras/refreeze.git refreeze
     python refreeze/freeze.py
     cat > Makefile << EOF
@@ -530,19 +572,29 @@ index.html: talk.md talk.css
 	python refreeze/freeze.py
 	@cp index.html /tmp
 	@cat /tmp/index.html | sed "s;img/;/$talk/img/;" > index.html
+	vim -s script index.html
 
 test:
+	python -m doctest talk.md
+
+pytest:
 	python -m pytest -vx --doctest-glob '*.md'
 
 RANDOM_PORT=\`python -c 'import random; print(int(5000+ 5000*random.random()))'\`
 
 slideshow:
 	PORT=\$(RANDOM_PORT) python refreeze/flask_app.py &
-	gnome-terminal --tab -e "vim talk.md"
+show:
+	python open_static.py
 EOF
-    git add talk.md  .gitignore requirements.txt index.html Makefile
+    cat > script <<EOF
+:%s/\#doctest.*//:wq
+EOF
+    make
+    git add talk.md talk.css index.html open_static.py .gitignore requirements.txt index.html Makefile
     git commit -m "initial commit"
 }       
+
 
 function pyver {
     python3 -c 'import sys; print(f"{sys.version_info.major}{sys.version_info.minor}")'
@@ -592,7 +644,6 @@ alias purge='mv -v *.[0-9] /tmp'
 
 alias intelpy2='. /opt/intel/intelpython27/bin/pythonvars.sh'
 alias intelpy3='. /opt/intel/intelpython35/bin/pythonvars.sh'
-alias doctest='python -m nose -v --with-doctest --doctest-tests --doctest-extension=rst testing.py'
 findall () 
 { 
     find ${2-.} -type f -exec grep -H $1 {} \;
@@ -674,7 +725,7 @@ g=$2
 # c=$3
 shift; shift
 set -x
-#boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
+# boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
 boxplot --cat Skola --filters Arbetsområde=$a Grupperingsnivå=$g $*
 set +x
 }
@@ -684,7 +735,7 @@ a=$1
 g=$2
 # c=$3
 shift; shift
-pointplot --cat Kön --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
+pointplot --cat Kön --table 0 --filters Arbetsområde=$a Grupperingsnivå=$g  $*
 }
 
 function bef {
@@ -727,21 +778,82 @@ function mut {
 }
 
 function newcourse {
-    newenv $1 && pip install jupyter jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader && nbgraderinit 
-    test -n "$1" && nbgrader quickstart $1 && cd $1 && \
-    cat << EOF >> nbgrader_config.py
+    course_id=$1
+    newvenv $course_id
+    venvdir=~/.venvs/$course_id
+    bindir=$venvdir/bin
+    $bindir/python -m pip install jupyter jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
+
+    $bindir/nbgrader quickstart $course_id && \
+    cat << EOF >> $course_id/nbgrader_config.py
 c.FileNameCollectorPlugin.named_regexp = \
-    r'.*[a-z]+_(?P<student_id>\d+)_(?P<submission_id>\d+)_(?P<file_id>.*)'
+    r'.*\w+_(?P<student_id>\d+)_(?P<submission_id>\d+)_(?P<file_id>.*)'
 c.ClearSolutions.code_stub = {'python': '# YOUR CODE HERE\n################', 'matlab': "% YOUR CODE HERE\nerror('No Answer Given!')", 'octave': "% YOUR CODE HERE\nerror('No Answer Given!')", 'sas': '/* YOUR CODE HERE */\n %notImplemented;', 'java': '// YOUR CODE HERE'}
 c.Exchange.root = '/srv/nbgrader/exchange'
 EOF
+    echo "export COURSE=$course_id" >> .envrc
+    mv .envrc $course_id
 }
 
-function newenv {
-    python3 -m venv ~/.venvs/$1 && source ~/.venvs/$1/bin/activate
-    python3 -m pip install pip wheel --upgrade
-    python3 -m pip install pip-chill
+function newvenv {
+    venv=$1 && shift 
+    venvdir=~/.venvs/$venv
+    python3 -m venv $venvdir
+    $venvdir/bin/python -m pip install pip wheel --upgrade
+    $venvdir/bin/python -m pip install pip-chill $@
+
+    cat > .envrc <<EOF
+source $venvdir/bin/activate
+unset PS1
+EOF
+    direnv allow
 }
+
+function envrc {
+    venvdir=~/.venvs/${1-${PWD:t}}
+    echo "source $venvdir/bin/activate" > .envrc
+    echo "unset PS1" >> .envrc
+    direnv allow
+}
+
+function newpkg {
+    echo "#!/usr/bin/env/pythonfrom setuptools import setupsetup()" > setup.py
+    pkg=$1
+    cat > setup.cfg << EOF
+[metadata]
+name = $pkg
+description-file = README.md
+version = attr: $pkg.__version__
+author = Olav Vahtras
+author_email = vahtras@kth.se
+license = GPLv3
+license_file = LICENSE
+description = $pkg: DESCRIBE ME
+long_description = file: README.md
+long_description_content_type = text/markdown
+url = https://github.com/vahtras/$pkg
+classifiers =
+    Development Status :: 5 - Production/Stable
+    Intended Audience :: Science/Research
+    License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+    Programming Language :: Python
+    Programming Language :: Python :: 3
+    Programming Language :: Python :: 3.7
+    Programming Language :: Python :: 3.8
+    Programming Language :: Python :: 3.9
+    Programming Language :: Python :: 3.10
+    Topic :: Scientific/Engineering :: Chemistry
+
+[options]
+packages = $pkg
+python_requires > 3.6
+
+[options.entry_points]
+console_scripts =
+    $pkg = $pkg.__main__:main
+EOF
+}
+
 
 function wo {
     source ~/.venvs/$1/bin/activate
@@ -836,9 +948,50 @@ EOF
 }
 
 function png {
-   mv -v "$(ls -t ~/Pictures/Screenshot* | head -1)" $1.png
+   mv -v "$(ls -t ~/Pictures/Screenshots/Screenshot* | head -1)" $1.png
 }
 
 function getdown {
    mv -iv ~/Downloads/$(ls -t ~/Downloads | head -1) .
+}
+
+function git-checkout-pr {
+    pull_request=$1
+    remote_repo=${2-origin}
+    git fetch $remote_repo pull/$pull_request/head:PR$pull_request
+    git checkout PR$pull_request
+}
+
+function booklet {
+    pdftk "$1" cat 4 5 3south 6south 2 7 1south 8south output booklet-"$1"
+    lpr -o number-up=2  booklet-"$1" -P PDF
+}
+
+function dbtables {
+    dbschema $1 | grep "CREATE TABLE" | cut -f 3 -d " " | tr '\n' ' '
+}
+
+function dbschema {
+    sqlite3 $1 << EOF
+.schema
+EOF
+}
+
+function dbcat {
+    db=$1
+    for table in $(dbtables $db); do
+    echo "SELECT * FROM $table;"
+    sqlite3 $db << EOF
+.header on
+.mode column
+SELECT * FROM $table;
+EOF
+
+done
+}
+
+function undropbox {
+    dir=$1
+    rsync -av $dir vahtras.se:/mnt
+    mv $dir ~/UnDropbox
 }
