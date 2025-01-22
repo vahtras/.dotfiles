@@ -21,6 +21,8 @@ Plugin 'dense-analysis/ale'
 Plugin 'kristijanhusak/vim-carbon-now-sh'
 Plugin 'github/copilot.vim'
 Plugin 'NoahTheDuke/vim-just'
+Plugin 'prabirshrestha/vim-lsp'
+
 
 " All of your Plugins must be added before the following line
 call vundle#end()            " required
@@ -115,6 +117,7 @@ hi SpellLocal cterm=undercurl ctermfg=blue
 hi clear SpellRare
 hi SpellLocal cterm=underline ctermfg=darkgreen
 
+au BufWritePost talk.md !make
 "au BufWritePost *.py !python -m pytest -vx
 au BufWritePost *.py !test -f tests/test_% && python -m pytest -x  tests/test_% || :
 au BufWritePost lib.rs !maturin develop
@@ -131,7 +134,7 @@ au BufWritePost *.tex !make $(basename % .tex).pdf
 ":map  mx?def w"zyiw:exe "!python -m pytest -v -k ".@z." "<CR>
 ":nmap ; mx?def w"zyiw:!python -m pytest --pdb -vx -k z %
 :nmap ;T mx?class w"zyiw:term python3 -m pytest --pdb -vvx -k z %
-:nmap ;t mx?def w"zyiw:term python3 -m pytest --pdb -vvx -k z %
+:nmap ;t mx?def w"zyiw:term python3 -m pytest --no-header --pdb -vvx --regex ".*z$" %
 :nmap ;v mx?def w"zyiw:vert term python3 -m pytest --pdb -vvx -k z %
 :nmap ;s mx?def w"zyiw:term python3 -m pytest --pdb -svx -k z %
 :nmap ,vt :vert term python3 -m pytest --pdb -vv %
@@ -163,3 +166,11 @@ inoremap <p> <p></p>hhhi
 inoremap <form> <form></form>O
 
 set vb
+
+if executable('rust-analyzer')
+  au User lsp_setup call lsp#register_server({
+        \   'name': 'Rust Language Server',
+        \   'cmd': {server_info->['rust-analyzer']},
+        \   'whitelist': ['rust'],
+        \ })
+endif

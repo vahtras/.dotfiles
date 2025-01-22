@@ -14,9 +14,10 @@ alias newslide='cookiecutter cookiecutter-slides'
 alias taif='tail -f $(ls -t | head -1)'
 alias kindle='open https://read.amazon.com/notebook'
 alias lsl='ls -lth | head'
+alias lsh='ls --hyperlink=auto'
 # alias vil='vim "$(ls -t | head -1)"'
 alias openl='xdg-open "$(ls -t | head -1)"'
-alias pip='PIP_FORMAT=columns python3 -m pip'
+alias pip='PIP_FORMAT=columns uv pip'
 alias pup='pip install pip setuptools wheel --upgrade'
 alias piplist='pip-chill --no-chill'
 alias pyl='python $(ls -t | head -1)'
@@ -476,11 +477,8 @@ function dalgrep_ci {
     PYTHONPATH=~/dev/py python -m dalmisc.scan_dalton  --ci-energies --fmt="%14.6f" $* | sort -k 2 
 }
 
-
-function newtalk {
-test "$1" != "" || exit
-talk=$1
-mkdir $talk && cd $talk && cat > talk.css << EOF
+function newcss {
+cat > talk.css << EOF
 <style>
 .centered {
   display: block;
@@ -492,7 +490,10 @@ mkdir $talk && cd $talk && cat > talk.css << EOF
 <script src="/$talk/refreeze/js/highlight/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 EOF
-cat > talk.md << EOF
+}
+
+function newmd {
+    cat > talk.md << EOF
 # $talk
 
 ## h2
@@ -525,19 +526,22 @@ layout: false
 
 - Write me
 EOF
-
-    git init
-    git checkout -b gh-pages
+}
+function dotgitignore {
     cat >> .gitignore << EOF
 *.pyc
 EOF
+}
+
+function dotgithooks {
     cat >> .git/hooks/pre-commit << EOF
 #!/bin/bash
 make test || exit 1
 make && git add index.html
 EOF
     chmod +x .git/hooks/pre-commit
-
+}
+function openstatic {
     cat > open_static.py << EOF
 #!/usr/bin/env python
 
@@ -556,17 +560,9 @@ def index():
 port = int(5000 + 5000*random.random())
 app.run(debug=True, port=port)
 EOF
-    #echo .venv > .gitignore
-    #python3 -m venv .venv --prompt $talk
-    #source .venv/bin/activate
-    newvenv talk-$talk && wo talk-$talk
-    pip install pip --upgrade
-    pip install Flask
-    pip install Frozen-Flask
-    pip install pytest
-    piplist > requirements.txt
-    git submodule add https://github.com/vahtras/refreeze.git refreeze
-    python refreeze/freeze.py
+}
+
+function newmake {
     cat > Makefile << EOF
 index.html: talk.md talk.css
 	python refreeze/freeze.py
@@ -585,11 +581,34 @@ RANDOM_PORT=\`python -c 'import random; print(int(5000+ 5000*random.random()))'\
 slideshow:
 	PORT=\$(RANDOM_PORT) python refreeze/flask_app.py &
 show:
-	python open_static.py
+	python refreeze/open_static.py
 EOF
     cat > script <<EOF
 :%s/\#doctest.*//:wq
 EOF
+}
+
+function newtalk {
+    test "$1" != "" || (echo "Usage: newtalk <topic>"; return 1) || return 1
+    talk=$1
+    mkdir $talk && cd $talk
+    newcss
+    newmd
+
+    git init
+    git checkout -b gh-pages
+    dotgitignore
+    dotgithooks
+    openstatic
+    newmake
+
+
+    newvenv talk-$talk 
+    uv pip install setuptools Frozen-Flask pytest pip-chill
+    pip-chill > requirements.txt
+    git submodule add https://github.com/vahtras/refreeze.git refreeze
+    python refreeze/freeze.py
+
     make
     git add talk.md talk.css index.html open_static.py .gitignore requirements.txt index.html Makefile
     git commit -m "initial commit"
@@ -610,15 +629,6 @@ test -r requirements-dev.txt && python3 -m pip install -r requirements-dev.txt
 test -r requirements-dev.txt || test -r requirements.txt && python3 -m pip install -r requirements.txt 
 }
 
-function venv36 {
-python3.6 -m venv .venv36 --prompt "venv36-$(basename $PWD)"
-. .venv36/bin/activate
-pip install --upgrade pip $@
-usemkl
-if [ "$1" == "install" ]; then
-    test -r requirements.txt && pip install -r requirements.txt
-fi
-}
 
 function venv {
 ver=${1-3.8}
@@ -779,34 +789,31 @@ function mut {
 
 function newcourse {
     course_id=$1
-    newvenv $course_id
-    venvdir=~/.venvs/$course_id
+    pyenv virtualenv $course_id
+    venvdir=~/.pyenv/versions/$course_id
     bindir=$venvdir/bin
-    $bindir/python -m pip install jupyter jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
+    source $venvdir/bin/activate
+    uv pip install setuptools wheel --upgrade
+    uv pip install jupyterlab-vim jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
 
-    $bindir/nbgrader quickstart $course_id && \
+    nbgrader quickstart $course_id && \
     cat << EOF >> $course_id/nbgrader_config.py
 c.FileNameCollectorPlugin.named_regexp = \
     r'.*\w+_(?P<student_id>\d+)_(?P<submission_id>\d+)_(?P<file_id>.*)'
 c.ClearSolutions.code_stub = {'python': '# YOUR CODE HERE\n################', 'matlab': "% YOUR CODE HERE\nerror('No Answer Given!')", 'octave': "% YOUR CODE HERE\nerror('No Answer Given!')", 'sas': '/* YOUR CODE HERE */\n %notImplemented;', 'java': '// YOUR CODE HERE'}
 c.Exchange.root = '/srv/nbgrader/exchange'
 EOF
-    echo "export COURSE=$course_id" >> .envrc
-    mv .envrc $course_id
+    cd $course_id
+    echo "export COURSE=$course_id" > .envrc
+    direnv allow
+    pyenv local $course_id
 }
 
 function newvenv {
     venv=$1 && shift 
-    venvdir=~/.venvs/$venv
-    python3 -m venv $venvdir
-    $venvdir/bin/python -m pip install pip wheel --upgrade
-    $venvdir/bin/python -m pip install pip-chill $@
-
-    cat > .envrc <<EOF
-source $venvdir/bin/activate
-unset PS1
-EOF
-    direnv allow
+    pyenv virtualenv $venv
+    pyenv local $venv
+    source ~/.pyenv/versions/$venv
 }
 
 function envrc {
