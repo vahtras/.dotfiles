@@ -1,6 +1,33 @@
 set nocompatible              " required
 filetype on                  " required
 
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" let Vundle manage Vundle, required
+Plugin 'gmarik/Vundle.vim'
+
+" add all your plugins here (note older versions of Vundle
+" used Bundle instead of Plugin)
+
+" Plugin 'Vallroic/YouCompleteMe'
+"Plugin 'vim-syntastic/syntastic'
+"Plugin 'nvie/vim-flake8'
+Plugin 'dense-analysis/ale'
+Plugin 'kristijanhusak/vim-carbon-now-sh'
+Plugin 'github/copilot.vim'
+Plugin 'NoahTheDuke/vim-just'
+Plugin 'prabirshrestha/vim-lsp'
+
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+"let g:syntastic_python_checkers = ['flake8']
 let g:ale_linters = { "python": ["ruff"] }
 let g:ale_fixers = {
 \       "python": ["black", "ruff"],
@@ -97,6 +124,7 @@ hi SpellLocal cterm=undercurl ctermfg=blue
 hi clear SpellRare
 hi SpellLocal cterm=underline ctermfg=darkgreen
 
+au BufWritePost talk.md !make
 "au BufWritePost *.py !python -m pytest -vx
 "au BufWritePost *.py !test -f tests/test_% && python -m pytest -x  tests/test_% || :
 au BufWritePost */*.py !test -f tests/test_`basename %` && python -m pytest --pdb -x tests/test_`basename %` || :
@@ -115,7 +143,7 @@ au BufWritePost talk.md !make
 ":map  mx?def w"zyiw:exe "!python -m pytest -v -k ".@z." "<CR>
 ":nmap ; mx?def w"zyiw:!python -m pytest --pdb -vx -k z %
 :nmap ;T mx?class w"zyiw:term python3 -m pytest --pdb -vvx -k z %
-:nmap ;t mx?def w"zyiw:term python3 -m pytest --pdb -vvx -k z %
+:nmap ;t mx?def w"zyiw:term python3 -m pytest --no-header --pdb -vvx --regex ".*z$" %
 :nmap ;v mx?def w"zyiw:vert term python3 -m pytest --pdb -vvx -k z %
 :nmap ;s mx?def w"zyiw:term python3 -m pytest --pdb -svx -k z %
 :nmap ,vt :vert term python3 -m pytest --pdb -vv %
@@ -149,7 +177,11 @@ inoremap <form> <form></form>O
 set ai
 set cmdheight=2
 set vb
-syntax on
-nnoremap \Z :setlocal foldexpr=(getline(v:lnum)=~@/)?0:1 foldmethod=expr foldlevel=0 foldcolumn=2 foldminlines=0<CR><CR>
-nnoremap \z :setlocal foldexpr=(getline(v:lnum)=~@/)?1:0 foldmethod=expr foldlevel=0 foldcolumn=2 foldminlines=0<CR><CR>
 
+if executable('rust-analyzer')
+  au User lsp_setup call lsp#register_server({
+        \   'name': 'Rust Language Server',
+        \   'cmd': {server_info->['rust-analyzer']},
+        \   'whitelist': ['rust'],
+        \ })
+endif

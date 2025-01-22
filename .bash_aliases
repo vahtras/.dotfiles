@@ -793,10 +793,11 @@ function newcourse {
     venvdir=~/.pyenv/versions/$course_id
     bindir=$venvdir/bin
     $bindir/python -m pip install pip --upgrade
+    source $venvdir/bin/activate
     uv pip install setuptools wheel --upgrade
     uv pip install jupyterlab-vim jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
 
-    $bindir/nbgrader quickstart $course_id && \
+    nbgrader quickstart $course_id && \
     cat << EOF >> $course_id/nbgrader_config.py
 c.FileNameCollectorPlugin.named_regexp = \
     r'.*\w+_(?P<student_id>\d+)_(?P<submission_id>\d+)_(?P<file_id>.*)'
@@ -804,6 +805,7 @@ c.ClearSolutions.code_stub = {'python': '# YOUR CODE HERE\n################', 'm
 c.Exchange.root = '/srv/nbgrader/exchange'
 EOF
     echo "export COURSE=$course_id" >> .envrc
+    cd $course_id
     echo "export COURSE=$course_id" > .envrc
     direnv allow
     pyenv local $course_id
