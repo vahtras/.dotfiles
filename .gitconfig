@@ -26,12 +26,16 @@ default = simple
 
 [core]
 editor=vim
+pager=less -FX
 
 [color]
 ui = auto
+
 [credential]
-	helper = cache
+helper = cache
+
 [init]
-	defaultBranch = main
+defaultBranch = main
+
 [core "excludes"]
-	file = /home/olav/.config/git/ignore
+file = /home/olav/.config/git/ignore

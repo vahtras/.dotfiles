@@ -1,53 +1,34 @@
 set nocompatible              " required
-filetype off                  " required
+filetype on                  " required
 
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
-
-" let Vundle manage Vundle, required
-Plugin 'gmarik/Vundle.vim'
-
-" add all your plugins here (note older versions of Vundle
-" used Bundle instead of Plugin)
-
-" Plugin 'Vallroic/YouCompleteMe'
-"Plugin 'vim-syntastic/syntastic'
-"Plugin 'nvie/vim-flake8'
-Plugin 'dense-analysis/ale'
-Plugin 'kristijanhusak/vim-carbon-now-sh'
-Plugin 'github/copilot.vim'
-Plugin 'NoahTheDuke/vim-just'
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
-filetype plugin indent on    " required
-"let g:syntastic_python_checkers = ['flake8']
 let g:ale_linters = { "python": ["ruff"] }
 let g:ale_fixers = {
 \       "python": ["black", "ruff"],
 \}
 
-let python_highlight_all=1
-syntax on
 
-
-"if &diff
-"    colorscheme gruvbox
-"endif
-
-let g:virtualenv_auto_activate = 1
-"let g:black_linelength = 79
 
 cab black !black %
+iab dropdown ```{admonition} Solution:class: dropdown~~~~~~```kkO
 cab evince !evince %<.pdf &
 cab latex !(latex -shell-escape %< && bibtex %< && latex -shell-escape %< && latex -shell-escape %<)
 cab notabs %s/	/    /g
 cab pdflatex !(pdflatex %< && bibtex %< && pdflatex %< && pdflatex %<)
 cab ru term cargo run
+cab seb !yal --konto SEB --vr %
+cab seb5 !yal --konto SEB5 --vr %
+cab sebf !yal --konto SEBF --vr %
+cab swe !yal --konto SWE --vr %
+cab bk !yal --konto BK --vr %
+cab hk !yal --konto HK --vr %
+cab ska !yal --konto Skandia --vr %
+cab db !yal --konto DB --vr %
+cab ec !yal --konto EC --vr %
+cab ax !yal --konto AX --vr %
+cab ica !yal --konto ICA --vr %
+cab vr !yal % --vr --konto
+
+
 cab xdvi !xdvi %<.dvi &
 cab xpdf !xpdf %<.pdf &
 iab bargparse import argparseparser = argparse.ArgumentParser()parser.add_argument('arg', help='First arg')parser.add_argument('--opt', help='First opt')parser.add_argument('--flag', action='store_true', help='Set flag true')args = parser.parse_args()
@@ -88,6 +69,7 @@ au BufNewFile,BufRead [Mm]akefile set ts=8
 au BufNewFile,BufRead *.mk set ts=8
 au BufNewFile,BufRead *.cpp set ts=4
 au BufNewFile,BufRead *.h set ts=4
+au BufNewFile,BufRead *.py set ts=4 sw=4 expandtab
 
 
 " split
@@ -116,7 +98,8 @@ hi clear SpellRare
 hi SpellLocal cterm=underline ctermfg=darkgreen
 
 "au BufWritePost *.py !python -m pytest -vx
-au BufWritePost *.py !test -f tests/test_% && python -m pytest -x  tests/test_% || :
+"au BufWritePost *.py !test -f tests/test_% && python -m pytest -x  tests/test_% || :
+au BufWritePost */*.py !test -f tests/test_`basename %` && python -m pytest --pdb -x tests/test_`basename %` || :
 au BufWritePost lib.rs !maturin develop
 au BufWritePost main.rs !cargo run
 "au BufWritePost test_*.py !python -m pytest -vvx %
@@ -125,6 +108,7 @@ au BufWritePost main.rs !cargo run
 "au BufWritePost *.md !make test
 "au BufWritePost *.py !python -m nose -x
 au BufWritePost *.tex !make $(basename % .tex).pdf
+au BufWritePost talk.md !make
 ":map  "zyiw:!python -m pytest ".@z.""<CR>
 " With the cursur over the test function name, run this with pytest
 ":map  mx?def w"zyiw:exe "!python -m pytest -v -k ".@z." %"<CR>
@@ -162,4 +146,10 @@ inoremap <li> <li></li>hhhhi
 inoremap <p> <p></p>hhhi
 inoremap <form> <form></form>O
 
+set ai
+set cmdheight=2
 set vb
+syntax on
+nnoremap \Z :setlocal foldexpr=(getline(v:lnum)=~@/)?0:1 foldmethod=expr foldlevel=0 foldcolumn=2 foldminlines=0<CR><CR>
+nnoremap \z :setlocal foldexpr=(getline(v:lnum)=~@/)?1:0 foldmethod=expr foldlevel=0 foldcolumn=2 foldminlines=0<CR><CR>
+

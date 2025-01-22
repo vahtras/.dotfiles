@@ -15,8 +15,8 @@ alias taif='tail -f $(ls -t | head -1)'
 alias kindle='open https://read.amazon.com/notebook'
 alias lsl='ls -lth | head'
 # alias vil='vim "$(ls -t | head -1)"'
-alias openl='xdg-open "$(ls -t | head -1)"'
-alias pip='PIP_FORMAT=columns python3 -m pip'
+# alias openl='xdg-open "$(ls -t | head -1)"'
+alias pip='PIP_FORMAT=columns uv pip'
 alias pup='pip install pip setuptools wheel --upgrade'
 alias piplist='pip-chill --no-chill'
 alias pyl='python $(ls -t | head -1)'
@@ -29,8 +29,9 @@ alias tmpenv='condaenv=$(basename $(mktemp -u))-${PYTHON-3.7} && conda create -y
 alias vrc='vim ~/.vimrc'
 # alias vlx='python -m veloxchem'
 alias x='xsel -b'
-alias open='xdg-open'
+# alias open='xdg-open'
 alias xpdfl='xpdf "$(ls -t *.pdf| head -1)"'
+alias unzipl='unzip "$(ls -t *.png| head -1)"'
 alias xviewl='xview "$(ls -t *.png| head -1)"'
 alias condainit='eval "$(~/miniconda/condabin/conda  shell.bash hook)"'
 alias nbgraderinit='jupyter nbextension install --sys-prefix --py nbgrader --overwrite; jupyter nbextension enable --sys-prefix --py nbgrader; jupyter serverextension enable --sys-prefix --py nbgrader'
@@ -480,7 +481,8 @@ function dalgrep_ci {
 function newtalk {
 test "$1" != "" || exit
 talk=$1
-mkdir $talk && cd $talk && cat > talk.css << EOF
+git init $talk && cd $talk
+cat > talk.css << EOF
 <style>
 .centered {
   display: block;
@@ -526,10 +528,10 @@ layout: false
 - Write me
 EOF
 
-    git init
     git checkout -b gh-pages
     cat >> .gitignore << EOF
 *.pyc
+.python-version
 EOF
     cat >> .git/hooks/pre-commit << EOF
 #!/bin/bash
@@ -559,12 +561,13 @@ EOF
     #echo .venv > .gitignore
     #python3 -m venv .venv --prompt $talk
     #source .venv/bin/activate
-    newvenv talk-$talk && wo talk-$talk
+    pyenv virtualenv $talk
+    pyenv local $talk
     pip install pip --upgrade
     pip install Flask
     pip install Frozen-Flask
     pip install pytest
-    piplist > requirements.txt
+    pip freeze > requirements.txt
     git submodule add https://github.com/vahtras/refreeze.git refreeze
     python refreeze/freeze.py
     cat > Makefile << EOF
@@ -591,8 +594,8 @@ EOF
 :%s/\#doctest.*//:wq
 EOF
     make
-    git add talk.md talk.css index.html open_static.py .gitignore requirements.txt index.html Makefile
-    git commit -m "initial commit"
+    git add .gitignore script talk.md talk.css index.html open_static.py .gitignore requirements.txt index.html Makefile
+    git commit -m "initialize with template"
 }       
 
 
@@ -648,8 +651,6 @@ findall ()
 { 
     find ${2-.} -type f -exec grep -H $1 {} \;
 }
-
-catcsv () { python -c "import pandas; print(pandas.read_csv('$1', sep='${2-,}'))" ;}
 
 
 function makelecture {
@@ -719,14 +720,33 @@ source venv.$(basename $(pwd))/bin/activate
 pip3 install -r requirements.txt
 }
 
-function besta {
+function besta1 {
 a=$1
 g=$2
 # c=$3
 shift; shift
 set -x
-# boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
 boxplot --cat Skola --filters Arbetsområde=$a Grupperingsnivå=$g $*
+set +x
+}
+
+function besta2 {
+a=$1
+g=$2
+# c=$3
+shift; shift
+set -x
+boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
+set +x
+}
+
+function besta3 {
+a=$1
+g=$2
+# c=$3
+shift; shift
+set -x
+boxplot --cat Skola --filters Arbomr=$a Grupperingsnivå=$g --table 0 $*
 set +x
 }
 
@@ -779,10 +799,11 @@ function mut {
 
 function newcourse {
     course_id=$1
-    newvenv $course_id
-    venvdir=~/.venvs/$course_id
+    pyenv virtualenv $course_id
+    venvdir=~/.pyenv/versions/$course_id
     bindir=$venvdir/bin
-    $bindir/python -m pip install jupyter jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
+    $bindir/python -m pip install pip --upgrade
+    $bindir/python -m pip install jupyterlab jupyterlab-vim nbclassic jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
 
     $bindir/nbgrader quickstart $course_id && \
     cat << EOF >> $course_id/nbgrader_config.py
@@ -793,6 +814,7 @@ c.Exchange.root = '/srv/nbgrader/exchange'
 EOF
     echo "export COURSE=$course_id" >> .envrc
     mv .envrc $course_id
+    echo $course_id > $course_id/.python-version
 }
 
 function newvenv {
@@ -994,4 +1016,10 @@ function undropbox {
     dir=$1
     rsync -av $dir vahtras.se:/mnt
     mv $dir ~/UnDropbox
+}
+
+function ssh-tunnel {
+   host=$1
+   port=$2
+   ssh -L ${port}:localhost:$port $host
 }
