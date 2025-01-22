@@ -14,8 +14,9 @@ alias newslide='cookiecutter cookiecutter-slides'
 alias taif='tail -f $(ls -t | head -1)'
 alias kindle='open https://read.amazon.com/notebook'
 alias lsl='ls -lth | head'
+alias lsh='ls --hyperlink=auto'
 # alias vil='vim "$(ls -t | head -1)"'
-# alias openl='xdg-open "$(ls -t | head -1)"'
+alias openl='xdg-open "$(ls -t | head -1)"'
 alias pip='PIP_FORMAT=columns uv pip'
 alias pup='pip install pip setuptools wheel --upgrade'
 alias piplist='pip-chill --no-chill'
@@ -29,9 +30,8 @@ alias tmpenv='condaenv=$(basename $(mktemp -u))-${PYTHON-3.7} && conda create -y
 alias vrc='vim ~/.vimrc'
 # alias vlx='python -m veloxchem'
 alias x='xsel -b'
-# alias open='xdg-open'
+alias open='xdg-open'
 alias xpdfl='xpdf "$(ls -t *.pdf| head -1)"'
-alias unzipl='unzip "$(ls -t *.png| head -1)"'
 alias xviewl='xview "$(ls -t *.png| head -1)"'
 alias condainit='eval "$(~/miniconda/condabin/conda  shell.bash hook)"'
 alias nbgraderinit='jupyter nbextension install --sys-prefix --py nbgrader --overwrite; jupyter nbextension enable --sys-prefix --py nbgrader; jupyter serverextension enable --sys-prefix --py nbgrader'
@@ -477,11 +477,7 @@ function dalgrep_ci {
     PYTHONPATH=~/dev/py python -m dalmisc.scan_dalton  --ci-energies --fmt="%14.6f" $* | sort -k 2 
 }
 
-
-function newtalk {
-test "$1" != "" || exit
-talk=$1
-git init $talk && cd $talk
+function newcss {
 cat > talk.css << EOF
 <style>
 .centered {
@@ -494,7 +490,10 @@ cat > talk.css << EOF
 <script src="/$talk/refreeze/js/highlight/highlight.pack.js"></script>
 <script>hljs.initHighlightingOnLoad();</script>
 EOF
-cat > talk.md << EOF
+}
+
+function newmd {
+    cat > talk.md << EOF
 # $talk
 
 ## h2
@@ -527,19 +526,22 @@ layout: false
 
 - Write me
 EOF
-
-    git checkout -b gh-pages
+}
+function dotgitignore {
     cat >> .gitignore << EOF
 *.pyc
-.python-version
 EOF
+}
+
+function dotgithooks {
     cat >> .git/hooks/pre-commit << EOF
 #!/bin/bash
 make test || exit 1
 make && git add index.html
 EOF
     chmod +x .git/hooks/pre-commit
-
+}
+function openstatic {
     cat > open_static.py << EOF
 #!/usr/bin/env python
 
@@ -558,18 +560,9 @@ def index():
 port = int(5000 + 5000*random.random())
 app.run(debug=True, port=port)
 EOF
-    #echo .venv > .gitignore
-    #python3 -m venv .venv --prompt $talk
-    #source .venv/bin/activate
-    pyenv virtualenv $talk
-    pyenv local $talk
-    pip install pip --upgrade
-    pip install Flask
-    pip install Frozen-Flask
-    pip install pytest
-    pip freeze > requirements.txt
-    git submodule add https://github.com/vahtras/refreeze.git refreeze
-    python refreeze/freeze.py
+}
+
+function newmake {
     cat > Makefile << EOF
 index.html: talk.md talk.css
 	python refreeze/freeze.py
@@ -588,14 +581,37 @@ RANDOM_PORT=\`python -c 'import random; print(int(5000+ 5000*random.random()))'\
 slideshow:
 	PORT=\$(RANDOM_PORT) python refreeze/flask_app.py &
 show:
-	python open_static.py
+	python refreeze/open_static.py
 EOF
     cat > script <<EOF
 :%s/\#doctest.*//:wq
 EOF
+}
+
+function newtalk {
+    test "$1" != "" || (echo "Usage: newtalk <topic>"; return 1) || return 1
+    talk=$1
+    mkdir $talk && cd $talk
+    newcss
+    newmd
+
+    git init
+    git checkout -b gh-pages
+    dotgitignore
+    dotgithooks
+    openstatic
+    newmake
+
+
+    newvenv talk-$talk 
+    uv pip install setuptools Frozen-Flask pytest pip-chill
+    pip-chill > requirements.txt
+    git submodule add https://github.com/vahtras/refreeze.git refreeze
+    python refreeze/freeze.py
+
     make
-    git add .gitignore script talk.md talk.css index.html open_static.py .gitignore requirements.txt index.html Makefile
-    git commit -m "initialize with template"
+    git add talk.md talk.css index.html open_static.py .gitignore requirements.txt index.html Makefile
+    git commit -m "initial commit"
 }       
 
 
@@ -613,15 +629,6 @@ test -r requirements-dev.txt && python3 -m pip install -r requirements-dev.txt
 test -r requirements-dev.txt || test -r requirements.txt && python3 -m pip install -r requirements.txt 
 }
 
-function venv36 {
-python3.6 -m venv .venv36 --prompt "venv36-$(basename $PWD)"
-. .venv36/bin/activate
-pip install --upgrade pip $@
-usemkl
-if [ "$1" == "install" ]; then
-    test -r requirements.txt && pip install -r requirements.txt
-fi
-}
 
 function venv {
 ver=${1-3.8}
@@ -651,6 +658,8 @@ findall ()
 { 
     find ${2-.} -type f -exec grep -H $1 {} \;
 }
+
+catcsv () { python -c "import pandas; print(pandas.read_csv('$1', sep='${2-,}'))" ;}
 
 
 function makelecture {
@@ -726,31 +735,12 @@ g=$2
 # c=$3
 shift; shift
 set -x
+# boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
 boxplot --cat Skola --filters Arbetsområde=$a Grupperingsnivå=$g $*
 set +x
 }
 
 function besta2 {
-a=$1
-g=$2
-# c=$3
-shift; shift
-set -x
-boxplot --cat Skola --filters ArbOmr=$a Grupp.nivå=$g --table 0 $*
-set +x
-}
-
-function besta3 {
-a=$1
-g=$2
-# c=$3
-shift; shift
-set -x
-boxplot --cat Skola --filters Arbomr=$a Grupperingsnivå=$g --table 0 $*
-set +x
-}
-
-function ppbesta {
 a=$1
 g=$2
 # c=$3
@@ -803,7 +793,8 @@ function newcourse {
     venvdir=~/.pyenv/versions/$course_id
     bindir=$venvdir/bin
     $bindir/python -m pip install pip --upgrade
-    $bindir/python -m pip install jupyterlab jupyterlab-vim nbclassic jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
+    uv pip install setuptools wheel --upgrade
+    uv pip install jupyterlab-vim jupyter_contrib_nbextensions jupyter_nbextensions_configurator nbgrader
 
     $bindir/nbgrader quickstart $course_id && \
     cat << EOF >> $course_id/nbgrader_config.py
@@ -813,22 +804,16 @@ c.ClearSolutions.code_stub = {'python': '# YOUR CODE HERE\n################', 'm
 c.Exchange.root = '/srv/nbgrader/exchange'
 EOF
     echo "export COURSE=$course_id" >> .envrc
-    mv .envrc $course_id
-    echo $course_id > $course_id/.python-version
+    echo "export COURSE=$course_id" > .envrc
+    direnv allow
+    pyenv local $course_id
 }
 
 function newvenv {
     venv=$1 && shift 
-    venvdir=~/.venvs/$venv
-    python3 -m venv $venvdir
-    $venvdir/bin/python -m pip install pip wheel --upgrade
-    $venvdir/bin/python -m pip install pip-chill $@
-
-    cat > .envrc <<EOF
-source $venvdir/bin/activate
-unset PS1
-EOF
-    direnv allow
+    pyenv virtualenv $venv
+    pyenv local $venv
+    source ~/.pyenv/versions/$venv
 }
 
 function envrc {
@@ -1016,10 +1001,4 @@ function undropbox {
     dir=$1
     rsync -av $dir vahtras.se:/mnt
     mv $dir ~/UnDropbox
-}
-
-function ssh-tunnel {
-   host=$1
-   port=$2
-   ssh -L ${port}:localhost:$port $host
 }
