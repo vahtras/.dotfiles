@@ -1,31 +1,5 @@
 set nocompatible              " required
 filetype on                  " required
-
-" set the runtime path to include Vundle and initialize
-set rtp+=~/.vim/bundle/Vundle.vim
-call vundle#begin()
-
-" alternatively, pass a path where Vundle should install plugins
-"call vundle#begin('~/some/path/here')
-
-" let Vundle manage Vundle, required
-Plugin 'gmarik/Vundle.vim'
-
-" add all your plugins here (note older versions of Vundle
-" used Bundle instead of Plugin)
-
-" Plugin 'Vallroic/YouCompleteMe'
-"Plugin 'vim-syntastic/syntastic'
-"Plugin 'nvie/vim-flake8'
-Plugin 'dense-analysis/ale'
-Plugin 'kristijanhusak/vim-carbon-now-sh'
-Plugin 'github/copilot.vim'
-Plugin 'NoahTheDuke/vim-just'
-Plugin 'prabirshrestha/vim-lsp'
-
-
-" All of your Plugins must be added before the following line
-call vundle#end()            " required
 filetype plugin indent on    " required
 "let g:syntastic_python_checkers = ['flake8']
 let g:ale_linters = { "python": ["ruff"] }
